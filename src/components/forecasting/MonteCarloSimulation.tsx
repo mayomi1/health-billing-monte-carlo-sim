@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BillingRecord, PaymentProbabilities, SimulationResults } from "@/types/billingTypes";
-import { runMonteCarloSimulation } from "@/lib/simulations";
 import { formatCurrency, formatPercentage } from "@/lib/formatters";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,19 +24,33 @@ interface MonteCarloSimulationProps {
 
 export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimulationProps) {
   const [paymentProbabilities, setPaymentProbabilities] = useState<PaymentProbabilities>({
-    Pending: 0.7,  // 70% chance that pending claims will be paid
-    Approved: 1.0, // 100% chance that approved claims will be paid
-    Denied: 0.1    // 10% chance that denied claims will be paid (appeals)
+    Pending: 0.7,
+    Approved: 1.0,
+    Denied: 0.1
   });
 
   const debouncedProbabilities = useDebounce(paymentProbabilities, 300);
-
-  const iterations = 2000;
+  const [iterations, setIterations] = useState(2000);
   const [results, setResults] = useState<SimulationResults | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [animatedRevenue, setAnimatedRevenue] = useState(0);
 
-  // Run simulation when probabilities change
+  const workerRef = useRef<Worker | null>(null);
+
+  useEffect(() => {
+    workerRef.current = new Worker(new URL('@/lib/workers/monte-carlo.worker.ts', import.meta.url));
+
+    workerRef.current.onmessage = (e: MessageEvent) => {
+      const simulationResults = e.data;
+      setResults(simulationResults);
+      setIsRunning(false);
+    };
+
+    return () => {
+      workerRef.current?.terminate();
+    };
+  }, []);
+
   useEffect(() => {
     runSimulation();
   }, [debouncedProbabilities]);
@@ -58,18 +71,14 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
   }, [results, animatedRevenue]);
 
   const runSimulation = () => {
+    if (!workerRef.current) return;
+
     setIsRunning(true);
-
-    setTimeout(() => {
-      const simulationResults = runMonteCarloSimulation(
-        billingRecords,
-        debouncedProbabilities,
-        iterations
-      );
-
-      setResults(simulationResults);
-      setIsRunning(false);
-    }, 0);
+    workerRef.current.postMessage({
+      billingRecords,
+      paymentProbabilities: debouncedProbabilities,
+      iterations
+    });
   };
 
   const handleProbabilityChange = (status: keyof PaymentProbabilities, value: number[]) => {
@@ -92,7 +101,6 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Probability Sliders */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Payment Probabilities</CardTitle>
@@ -177,7 +185,6 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
           </CardContent>
         </Card>
 
-        {/* Results Summary */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Simulation Results</CardTitle>
@@ -222,7 +229,6 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
         </Card>
       </div>
 
-      {/* Results Chart */}
       {results && (
         <Card>
           <CardHeader>
@@ -254,7 +260,7 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
                     }}
                   />
                   <Tooltip
-                    formatter={(value) => [
+                    formatter={(value, name) => [
                       `${(Number(value) * 100).toFixed(2)}%`,
                       'Probability'
                     ]}

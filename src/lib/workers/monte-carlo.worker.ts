@@ -1,6 +1,12 @@
 import { BillingRecord, PaymentProbabilities, SimulationResults } from "@/types/billingTypes";
 
-export function runMonteCarloSimulation(
+self.onmessage = (e: MessageEvent) => {
+  const { billingRecords, paymentProbabilities, iterations } = e.data;
+  const results = runMonteCarloSimulation(billingRecords, paymentProbabilities, iterations);
+  self.postMessage(results);
+};
+
+function runMonteCarloSimulation(
   billingRecords: BillingRecord[],
   paymentProbabilities: PaymentProbabilities,
   iterations: number = 2000
@@ -71,3 +77,5 @@ export function runMonteCarloSimulation(
     distribution
   };
 }
+
+export default runMonteCarloSimulation
