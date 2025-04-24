@@ -216,7 +216,7 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={formatChartData(results)}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                   <XAxis
@@ -225,7 +225,7 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
                     label={{
                       value: 'Revenue Amount',
                       position: 'insideBottom',
-                      offset: -5
+                      offset: -8
                     }}
                   />
                   <YAxis
@@ -259,7 +259,7 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
+            <p className="text-xs text-muted-foreground mt-5 text-center">
               This chart shows the probability distribution of possible revenue outcomes based on {iterations} simulation runs.
             </p>
           </CardContent>
