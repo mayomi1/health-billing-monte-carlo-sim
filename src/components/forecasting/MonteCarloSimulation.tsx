@@ -24,13 +24,14 @@ interface MonteCarloSimulationProps {
 
 export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimulationProps) {
   const [paymentProbabilities, setPaymentProbabilities] = useState<PaymentProbabilities>({
-    Pending: 0.7,
-    Approved: 1.0,
-    Denied: 0.1
+    Pending: 0.7,  // 70% chance that pending claims will be paid
+    Approved: 1.0, // 100% chance that approved claims will be paid
+    Denied: 0.1    // 10% chance that denied claims will be paid (appeals)
   });
 
   const debouncedProbabilities = useDebounce(paymentProbabilities, 300);
-  const [iterations, setIterations] = useState(2000);
+
+  const iterations = 2000;
   const [results, setResults] = useState<SimulationResults | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [animatedRevenue, setAnimatedRevenue] = useState(0);
@@ -51,6 +52,7 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
     };
   }, []);
 
+  // Run simulation when probabilities change
   useEffect(() => {
     runSimulation();
   }, [debouncedProbabilities]);
@@ -260,7 +262,7 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
                     }}
                   />
                   <Tooltip
-                    formatter={(value, name) => [
+                    formatter={(value) => [
                       `${(Number(value) * 100).toFixed(2)}%`,
                       'Probability'
                     ]}
