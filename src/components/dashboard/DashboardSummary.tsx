@@ -7,15 +7,17 @@ import { Activity, CheckCircle, CircleDashed, DollarSign, XCircle } from "lucide
 interface DashboardSummaryProps {
   totalAmount: number;
   claimsByStatus: Record<PaymentStatus, number>;
+  amountsByStatus: Record<PaymentStatus, number>;
 }
 
-export default function DashboardSummary({ 
-  totalAmount, 
-  claimsByStatus 
+export default function DashboardSummary({
+  totalAmount,
+  claimsByStatus,
+  amountsByStatus
 }: DashboardSummaryProps) {
-  
+
   const totalClaims = Object.values(claimsByStatus).reduce((sum, count) => sum + count, 0);
-  
+
   const statusIcons = {
     Pending: <CircleDashed className="h-4 w-4 text-chart-1" />,
     Approved: <CheckCircle className="h-4 w-4 text-chart-2" />,
@@ -51,7 +53,8 @@ export default function DashboardSummary({
             <div key={status} className="flex items-center space-x-2">
               {statusIcons[status as PaymentStatus]}
               <div>
-                <p className="text-sm font-medium">{count}</p>
+                <p className="text-sm font-medium">{count} claims</p>
+                <p className="text-xs font-bold">{formatCurrency(amountsByStatus[status as PaymentStatus])}</p>
                 <p className="text-xs text-muted-foreground">{status}</p>
               </div>
             </div>
@@ -61,9 +64,10 @@ export default function DashboardSummary({
 
       <Card className="lg:col-span-7">
         <CardContent className="pt-6">
-          <StatusDistributionChart 
-            claimsByStatus={claimsByStatus} 
-            totalAmount={totalAmount} 
+          <StatusDistributionChart
+            claimsByStatus={claimsByStatus}
+            amountsByStatus={amountsByStatus}
+            totalAmount={totalAmount}
           />
         </CardContent>
       </Card>

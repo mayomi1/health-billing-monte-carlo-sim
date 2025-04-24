@@ -35,16 +35,31 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
   const iterations = 2000;
   const [results, setResults] = useState<SimulationResults | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [animatedRevenue, setAnimatedRevenue] = useState(0);
 
   // Run simulation when probabilities change
   useEffect(() => {
     runSimulation();
   }, [debouncedProbabilities]);
 
+  useEffect(() => {
+    if (results && results.expectedRevenue !== animatedRevenue) {
+      const step = (results.expectedRevenue - animatedRevenue) / 2;
+      const timeout = setTimeout(() => {
+        setAnimatedRevenue(prev => {
+          const next = prev + step;
+          return Math.abs(next - results.expectedRevenue) < Math.abs(step)
+            ? results.expectedRevenue
+            : next;
+        });
+      }, 50);
+      return () => clearTimeout(timeout);
+    }
+  }, [results, animatedRevenue]);
+
   const runSimulation = () => {
     setIsRunning(true);
 
-    // Use setTimeout to prevent UI blocking
     setTimeout(() => {
       const simulationResults = runMonteCarloSimulation(
         billingRecords,
@@ -173,7 +188,9 @@ export default function MonteCarloSimulation({ billingRecords }: MonteCarloSimul
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Expected Revenue</p>
-                    <p className="text-2xl font-bold">{formatCurrency(results.expectedRevenue)}</p>
+                    <p className="text-2xl font-bold transition-all duration-500">
+                      {formatCurrency(animatedRevenue)}
+                    </p>
                   </div>
 
                   <div className="space-y-1">

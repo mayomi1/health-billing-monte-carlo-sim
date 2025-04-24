@@ -16,9 +16,10 @@ export default function Home() {
     summary: {
       totalAmount: number;
       claimsByStatus: Record<PaymentStatus, number>;
+      amountsByStatus: Record<PaymentStatus, number>;
     };
   } | null>(null);
-  
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function Home() {
           Visualize billing data and forecast revenue using Monte Carlo simulation
         </p>
       </div>
-      
+
       <Tabs defaultValue="dashboard" className="space-y-6">
         <TabsList>
           <TabsTrigger value="dashboard" className="flex items-center">
@@ -78,14 +79,15 @@ export default function Home() {
             Forecasting
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="dashboard" className="space-y-6">
-          <DashboardSummary 
+          <DashboardSummary
             totalAmount={billingData.summary.totalAmount}
             claimsByStatus={billingData.summary.claimsByStatus}
+            amountsByStatus={billingData.summary.amountsByStatus}
           />
         </TabsContent>
-        
+
         <TabsContent value="claims">
           <Card>
             <CardHeader>
@@ -99,7 +101,7 @@ export default function Home() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="forecasting">
           <Card>
             <CardHeader>

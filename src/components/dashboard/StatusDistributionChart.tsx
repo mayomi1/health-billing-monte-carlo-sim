@@ -1,7 +1,7 @@
 "use client";
 
 import { PaymentStatus } from "@/types/billingTypes";
-import { formatPercentage } from "@/lib/formatters";
+import { formatCurrency, formatPercentage } from "@/lib/formatters";
 import {
   Cell,
   Pie,
@@ -12,6 +12,7 @@ import {
 
 interface StatusDistributionChartProps {
   claimsByStatus: Record<PaymentStatus, number>;
+  amountsByStatus: Record<PaymentStatus, number>;
   totalAmount: number;
   className?: string;
 }
@@ -24,11 +25,13 @@ const StatusColors: Record<PaymentStatus, string> = {
 
 export default function StatusDistributionChart({
   claimsByStatus,
+  amountsByStatus,
   className
 }: StatusDistributionChartProps) {
   const chartData = Object.entries(claimsByStatus).map(([status, count]) => ({
     name: status,
-    value: count
+    value: count,
+    amount: amountsByStatus[status as PaymentStatus]
   }));
 
   return (
@@ -63,7 +66,13 @@ export default function StatusDistributionChart({
               ))}
             </Pie>
             <Tooltip
-              formatter={(value) => [`${value} claims`, 'Count']}
+              formatter={(value, name, props) => {
+                const entry = props.payload;
+                return [
+                  `${value} claims (${formatCurrency(entry.amount)})`,
+                  name
+                ];
+              }}
               contentStyle={{
                 backgroundColor: 'hsl(var(--background))',
                 borderColor: 'hsl(var(--border))',
@@ -85,7 +94,12 @@ export default function StatusDistributionChart({
               />
               <span className="text-sm">{status}</span>
             </div>
-            <span className="text-sm font-medium">{count} claims</span>
+            <div className="text-right">
+              <span className="text-sm font-medium">{count} claims</span>
+              <span className="text-sm text-muted-foreground ml-2">
+                ({formatCurrency(amountsByStatus[status as PaymentStatus])})
+              </span>
+            </div>
           </div>
         ))}
       </div>

@@ -1,6 +1,6 @@
 import { BillingRecord } from "@/types/billingTypes";
 
-export const billingRecords: BillingRecord[] = [
+export const providedRecord: BillingRecord[] = [
   {
     "patient_id": "P1",
     "patient_name": "John Smith",
@@ -47,3 +47,29 @@ export const billingRecords: BillingRecord[] = [
     "claim_date": "2025-02-21"
   }
 ];
+
+
+function generateMockData(count: number): BillingRecord[] {
+  const insuranceProviders = ["Blue Shield", "Medicare", "Aetna", "UnitedHealth", "Cigna", "Humana"];
+  const records: BillingRecord[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const amount = Math.round(Math.random() * 9000 + 1000);
+    const statuses = ["Pending", "Approved", "Denied"] as const;
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+
+    records.push({
+      patient_id: `P${(i + 1).toString().padStart(4, '0')}`,
+      patient_name: `Patient ${i + 1}`,
+      billing_code: `B${Math.floor(Math.random() * 9000 + 1000)}`,
+      amount: amount + Math.round(Math.random() * 99) / 100,
+      insurance_provider: insuranceProviders[Math.floor(Math.random() * insuranceProviders.length)],
+      payment_status: status,
+      claim_date: new Date(2024, Math.floor(Math.random() * 3), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0]
+    });
+  }
+
+  return records;
+}
+
+export const billingRecords = [...providedRecord, ...generateMockData(45)];

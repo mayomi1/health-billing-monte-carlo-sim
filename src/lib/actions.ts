@@ -8,6 +8,7 @@ export async function fetchBillingData(): Promise<{
   summary: {
     totalAmount: number;
     claimsByStatus: Record<PaymentStatus, number>;
+    amountsByStatus: Record<PaymentStatus, number>;
   };
 }> {
   // Simulating API delay
@@ -15,20 +16,26 @@ export async function fetchBillingData(): Promise<{
 
   // Calculate summary data
   const totalAmount = billingRecords.reduce((total, record) => total + record.amount, 0);
-  
-  const claimsByStatus = billingRecords.reduce(
-    (acc, record) => {
-      acc[record.payment_status]++;
-      return acc;
-    },
-    { Pending: 0, Approved: 0, Denied: 0 } as Record<PaymentStatus, number>
-  );
+
+  // Initialize accumulators
+  const initial = {
+    counts: { Pending: 0, Approved: 0, Denied: 0 } as Record<PaymentStatus, number>,
+    amounts: { Pending: 0, Approved: 0, Denied: 0 } as Record<PaymentStatus, number>
+  };
+
+  // Calculate both counts and amounts in a single reduce
+  const summary = billingRecords.reduce((acc, record) => {
+    acc.counts[record.payment_status]++;
+    acc.amounts[record.payment_status] += record.amount;
+    return acc;
+  }, initial);
 
   return {
     records: billingRecords,
     summary: {
       totalAmount,
-      claimsByStatus
+      claimsByStatus: summary.counts,
+      amountsByStatus: summary.amounts
     }
   };
 }
